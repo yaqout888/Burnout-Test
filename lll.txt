@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار الإرهاق الأكاديمي - Academic Burnout Test</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .english-text {
+            color: #6b7280;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+    <div id="app"></div>
+
+    <script>
+        let currentQuestion = 0;
+        let answers = {};
+        let started = false;
+        let showResults = false;
+
+        const questions = [
+            { id: 1, textAr: "كم مرة تشعر بالتعب والإرهاق؟", textEn: "How often do you feel tired?", category: "personal" },
+            { id: 2, textAr: "كم مرة تشعر بالإنهاك الجسدي؟", textEn: "How often are you physically exhausted?", category: "personal" },
+            { id: 3, textAr: "كم مرة تشعر بالإنهاك العاطفي؟", textEn: "How often are you emotionally exhausted?", category: "personal" },
+            { id: 4, textAr: "كم مرة تفكر: 'لا أستطيع المواصلة'؟", textEn: "How often do you think: 'I can't take it anymore'?", category: "personal" },
+            { id: 5, textAr: "كم مرة تشعر بالضعف والعرضة للمرض؟", textEn: "How often do you feel weak and susceptible to illness?", category: "personal" },
+            { id: 6, textAr: "كم مرة تشعر بالإحباط؟", textEn: "How often do you feel worn out?", category: "personal" },
+            { id: 7, textAr: "هل تشعر بالإرهاق من الدراسة والمشاريع الجامعية؟", textEn: "Do you feel worn out at the end of the study day?", category: "study" },
+            { id: 8, textAr: "هل تشعر بالإحباط من دراستك التخصصية؟", textEn: "Are you exhausted in the morning at the thought of another day at university?", category: "study" },
+            { id: 9, textAr: "هل تشعر أن كل ساعة دراسة متعبة بالنسبة لك؟", textEn: "Do you feel that every hour of study is tiring for you?", category: "study" },
+            { id: 10, textAr: "هل لديك طاقة كافية للعائلة والأصدقاء أثناء وقت فراغك من الدراسة؟", textEn: "Do you have enough energy for family and friends during leisure time?", category: "study", reverse: true },
+            { id: 11, textAr: "هل دراستك مرهقة عاطفياً؟", textEn: "Is your study emotionally exhausting?", category: "study" },
+            { id: 12, textAr: "هل تشعر أن دراستك تستنزفك؟", textEn: "Does your study frustrate you?", category: "study" },
+            { id: 13, textAr: "هل تشعر بالإرهاق بسبب العمل على المشاريع الدراسية؟", textEn: "Do you feel burnt out because of your study projects?", category: "study" },
+            { id: 14, textAr: "هل تجد صعوبة في التعامل مع زملائك في المشاريع الجماعية؟", textEn: "Do you find it hard to work with classmates?", category: "colleague" },
+            { id: 15, textAr: "هل تشعر بالإرهاق من التفاعل مع زملائك في الدراسة؟", textEn: "Do you feel drained working with your classmates?", category: "colleague" },
+            { id: 16, textAr: "هل تشعر أن التعامل مع المتطلبات الأكاديمية يستنزف طاقتك؟", textEn: "Does dealing with academic requirements drain your energy?", category: "colleague" },
+            { id: 17, textAr: "هل تشعر بالإحباط عند التعامل مع صعوبات المواد التقنية؟", textEn: "Do you feel frustrated dealing with technical course difficulties?", category: "colleague" },
+            { id: 18, textAr: "هل تتساءل كم من الوقت ستتمكن من مواصلة الدراسة بهذا الشكل؟", textEn: "Do you wonder how long you'll be able to continue studying like this?", category: "colleague" }
+        ];
+
+        const options = [
+            { value: 100, labelAr: "دائماً", labelEn: "Always" },
+            { value: 75, labelAr: "غالباً", labelEn: "Often" },
+            { value: 50, labelAr: "أحياناً", labelEn: "Sometimes" },
+            { value: 25, labelAr: "نادراً", labelEn: "Seldom" },
+            { value: 0, labelAr: "أبداً / نادراً جداً", labelEn: "Never/Almost never" }
+        ];
+
+        function handleAnswer(value) {
+            const question = questions[currentQuestion];
+            const actualValue = question.reverse ? 100 - value : value;
+            answers[question.id] = actualValue;
+
+            if (currentQuestion < questions.length - 1) {
+                currentQuestion++;
+                render();
+            } else {
+                showResults = true;
+                render();
+            }
+        }
+
+        function calculateResults() {
+            const personalQuestions = questions.filter(q => q.category === "personal");
+            const studyQuestions = questions.filter(q => q.category === "study");
+            const colleagueQuestions = questions.filter(q => q.category === "colleague");
+
+            const personalScore = personalQuestions.reduce((sum, q) => sum + (answers[q.id] || 0), 0) / personalQuestions.length;
+            const studyScore = studyQuestions.reduce((sum, q) => sum + (answers[q.id] || 0), 0) / studyQuestions.length;
+            const colleagueScore = colleagueQuestions.reduce((sum, q) => sum + (answers[q.id] || 0), 0) / colleagueQuestions.length;
+            const totalScore = (personalScore + studyScore + colleagueScore) / 3;
+
+            return { personalScore, studyScore, colleagueScore, totalScore };
+        }
+
+        function getLevel(score) {
+            if (score < 33) return { levelAr: "منخفض", levelEn: "Low", color: "green" };
+            if (score < 66) return { levelAr: "متوسط", levelEn: "Moderate", color: "yellow" };
+            return { levelAr: "مرتفع", levelEn: "High", color: "red" };
+        }
+
+        function getAdvice(scores) {
+            const { totalScore, personalScore, studyScore, colleagueScore } = scores;
+            const advice = [];
+
+            if (totalScore >= 66) {
+                advice.push({
+                    titleAr: "⚠️ مستوى إرهاق مرتفع - يحتاج إلى اهتمام فوري",
+                    titleEn: "High Burnout Level - Needs Immediate Attention",
+                    tips: [
+                        { ar: "تواصل مع المرشد الأكاديمي أو الإرشاد النفسي في الجامعة", en: "Contact your academic advisor or university counseling center" },
+                        { ar: "خذ استراحة من الدراسة إن أمكن واعتنِ بصحتك النفسية", en: "Take a break from studying if possible and focus on your mental health" },
+                        { ar: "قلل من عدد المواد أو المشاريع إن استطعت", en: "Reduce your course load or number of projects if you can" },
+                        { ar: "مارس تمارين الاسترخاء والتأمل يومياً", en: "Practice relaxation and meditation exercises daily" },
+                        { ar: "حدد أولوياتك واعمل على الأهم فقط", en: "Set priorities and work on only the most important tasks" }
+                    ]
+                });
+            } else if (totalScore >= 33) {
+                advice.push({
+                    titleAr: "⚡ مستوى إرهاق متوسط - انتبه لنفسك",
+                    titleEn: "Moderate Burnout Level - Take Care of Yourself",
+                    tips: [
+                        { ar: "نظم وقتك بشكل أفضل واستخدم تقنية Pomodoro", en: "Better organize your time and use the Pomodoro technique" },
+                        { ar: "خصص وقتاً للراحة والأنشطة الترفيهية", en: "Dedicate time for rest and recreational activities" },
+                        { ar: "تحدث مع أصدقائك أو عائلتك عن ضغوطك", en: "Talk to your friends or family about your stress" },
+                        { ar: "مارس الرياضة 3 مرات أسبوعياً على الأقل", en: "Exercise at least 3 times a week" },
+                        { ar: "احصل على نوم كافٍ (7-8 ساعات يومياً)", en: "Get adequate sleep (7-8 hours daily)" }
+                    ]
+                });
+            } else {
+                advice.push({
+                    titleAr: "✅ مستوى إرهاق منخفض - ممتاز!",
+                    titleEn: "Low Burnout Level - Excellent!",
+                    tips: [
+                        { ar: "حافظ على نمط حياتك الصحي الحالي", en: "Maintain your current healthy lifestyle" },
+                        { ar: "استمر في ممارسة عادات إدارة الوقت الجيدة", en: "Continue practicing good time management habits" },
+                        { ar: "ساعد زملاءك الذين قد يعانون من الإرهاق", en: "Help classmates who may be experiencing burnout" },
+                        { ar: "شارك تجربتك مع الآخرين", en: "Share your experience with others" }
+                    ]
+                });
+            }
+
+            if (personalScore >= 50) {
+                advice.push({
+                    titleAr: "🧘 الإرهاق الشخصي",
+                    titleEn: "Personal Burnout",
+                    tips: [
+                        { ar: "مارس تمارين التنفس العميق لمدة 5 دقائق يومياً", en: "Practice deep breathing exercises for 5 minutes daily" },
+                        { ar: "خصص وقتاً لهواياتك المفضلة", en: "Dedicate time to your favorite hobbies" },
+                        { ar: "احصل على قسط كافٍ من النوم", en: "Get adequate sleep" },
+                        { ar: "تناول طعاماً صحياً ومتوازناً", en: "Eat healthy and balanced meals" }
+                    ]
+                });
+            }
+
+            if (studyScore >= 50) {
+                advice.push({
+                    titleAr: "📚 الإرهاق الدراسي",
+                    titleEn: "Study-Related Burnout",
+                    tips: [
+                        { ar: "قسّم المشاريع الكبيرة إلى مهام صغيرة قابلة للإنجاز", en: "Break large projects into smaller, manageable tasks" },
+                        { ar: "استخدم أدوات إدارة المشاريع لتنظيم عملك", en: "Use project management tools to organize your work" },
+                        { ar: "اطلب المساعدة من الدكاترة والزملاء عند الحاجة", en: "Ask for help from professors and classmates when needed" },
+                        { ar: "لا تؤجل المهام - ابدأ مبكراً", en: "Don't procrastinate - start early" },
+                        { ar: "خذ استراحات منتظمة (استراحة 5 دقائق كل 25 دقيقة)", en: "Take regular breaks (5-minute break every 25 minutes)" }
+                    ]
+                });
+            }
+
+            if (colleagueScore >= 50) {
+                advice.push({
+                    titleAr: "👥 الإرهاق الاجتماعي الأكاديمي",
+                    titleEn: "Academic Social Burnout",
+                    tips: [
+                        { ar: "تواصل بوضوح مع زملائك في المشاريع الجماعية", en: "Communicate clearly with teammates in group projects" },
+                        { ar: "حدد الأدوار والمسؤوليات بشكل واضح", en: "Define roles and responsibilities clearly" },
+                        { ar: "لا تتردد في طلب الدعم من المجتمع الأكاديمي", en: "Don't hesitate to seek support from the academic community" },
+                        { ar: "انضم لمجموعات الدراسة التعاونية", en: "Join collaborative study groups" }
+                    ]
+                });
+            }
+
+            return advice;
+        }
+
+        function restart() {
+            currentQuestion = 0;
+            answers = {};
+            started = false;
+            showResults = false;
+            render();
+        }
+
+        function startTest() {
+            started = true;
+            render();
+        }
+
+        function renderStartScreen() {
+            return `
+                <div class="min-h-screen p-4 flex items-center justify-center">
+                    <div class="max-w-2xl w-full bg-white rounded-2xl shadow-xl p-8">
+                        <div class="text-center mb-8">
+                            <h1 class="text-3xl font-bold text-gray-800">اختبار الإرهاق الأكاديمي</h1>
+                            <p class="english-text" style="margin-top: 8px;">Academic Burnout Test</p>
+                            
+                            <p class="text-lg text-gray-600" style="margin-top: 20px;">مقياس كوبنهاغن للإرهاق</p>
+                            <p class="english-text" style="margin-top: 4px;">Copenhagen Burnout Inventory</p>
+                            
+                            <p class="text-sm text-gray-500" style="margin-top: 20px;">لطلاب الجامعات</p>
+                            <p class="english-text" style="margin-top: 4px;">For University Students</p>
+                        </div>
+                        
+                        <div class="bg-blue-50 rounded-lg p-6 mb-6">
+                            <h2 class="text-xl font-semibold text-gray-800">📋 عن الاختبار</h2>
+                            <p class="english-text" style="margin-top: 4px; margin-bottom: 16px;">About the Test</p>
+                            
+                            <div class="space-y-4 text-gray-700">
+                                <div>
+                                    <p>• يحتوي على 18 سؤالاً</p>
+                                    <p class="english-text" style="margin-top: 2px;">Contains 18 questions</p>
+                                </div>
+                                <div>
+                                    <p>• يستغرق حوالي 5 دقائق</p>
+                                    <p class="english-text" style="margin-top: 2px;">Takes about 5 minutes</p>
+                                </div>
+                                <div>
+                                    <p>• يقيس ثلاثة أبعاد: الإرهاق الشخصي، الدراسي، والاجتماعي</p>
+                                    <p class="english-text" style="margin-top: 2px;">Measures three dimensions: Personal, Study-related, and Social burnout</p>
+                                </div>
+                                <div>
+                                    <p>• النتائج فورية مع نصائح مخصصة</p>
+                                    <p class="english-text" style="margin-top: 2px;">Instant results with personalized advice</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-yellow-50 border-r-4 border-yellow-400 p-4 mb-6">
+                            <p class="text-sm text-gray-700">
+                                <strong>ملاحظة:</strong> هذا الاختبار للتوعية فقط وليس تشخيصاً طبياً. إذا كنت تعاني من إرهاق شديد، يُرجى استشارة مختص.
+                            </p>
+                            <p class="english-text" style="margin-top: 8px;">
+                                <strong>Note:</strong> This test is for awareness only and not a medical diagnosis. If you're experiencing severe burnout, please consult a specialist.
+                            </p>
+                        </div>
+
+                        <button onclick="startTest()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-4 rounded-lg transition-colors text-lg">
+                            ابدأ الاختبار
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderQuestion() {
+            const progress = ((currentQuestion + 1) / questions.length) * 100;
+            const question = questions[currentQuestion];
+            const categoryNameAr = question.category === 'personal' ? 'الإرهاق الشخصي' :
+                                question.category === 'study' ? 'الإرهاق الدراسي' : 'الإرهاق الاجتماعي';
+            const categoryNameEn = question.category === 'personal' ? 'Personal Burnout' :
+                                question.category === 'study' ? 'Study-Related Burnout' : 'Social Burnout';
+
+            return `
+                <div class="min-h-screen p-4">
+                    <div class="max-w-3xl mx-auto">
+                        <div class="bg-white rounded-lg shadow-md p-4 mb-6">
+                            <div class="flex justify-between items-center mb-2">
+                                <div>
+                                    <span class="text-sm font-medium text-gray-600">السؤال ${currentQuestion + 1} من ${questions.length}</span>
+                                    <span class="english-text">Question ${currentQuestion + 1} of ${questions.length}</span>
+                                </div>
+                                <span class="text-sm font-medium text-indigo-600">${Math.round(progress)}%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: ${progress}%"></div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-2xl shadow-xl p-8">
+                            <div class="mb-8">
+                                <span class="inline-block bg-indigo-100 text-indigo-800 text-xs font-semibold px-3 py-1 rounded-full mb-2">
+                                    ${categoryNameAr}
+                                </span>
+                                <span class="english-text">${categoryNameEn}</span>
+                                
+                                <h2 class="text-2xl font-bold text-gray-800 mt-4 mb-2">
+                                    ${question.textAr}
+                                </h2>
+                                <span class="english-text text-base">
+                                    ${question.textEn}
+                                </span>
+                            </div>
+
+                            <div class="space-y-3">
+                                ${options.map(option => `
+                                    <button onclick="handleAnswer(${option.value})" 
+                                        class="w-full text-right p-4 rounded-lg border-2 border-gray-200 hover:border-indigo-500 hover:bg-indigo-50 transition-all duration-200 text-gray-700 font-medium">
+                                        <div class="font-semibold">${option.labelAr}</div>
+                                        <span class="english-text">${option.labelEn}</span>
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderResults() {
+            const scores = calculateResults();
+            const totalLevel = getLevel(scores.totalScore);
+            const personalLevel = getLevel(scores.personalScore);
+            const studyLevel = getLevel(scores.studyScore);
+            const colleagueLevel = getLevel(scores.colleagueScore);
+            const advice = getAdvice(scores);
+
+            const colorClass = {
+                green: 'bg-green-50 border-green-600 text-green-600',
+                yellow: 'bg-yellow-50 border-yellow-600 text-yellow-600',
+                red: 'bg-red-50 border-red-600 text-red-600'
+            };
+
+            return `
+                <div class="min-h-screen p-4">
+                    <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8">
+                        <h1 class="text-3xl font-bold text-gray-800 mb-2 text-center">نتائج اختبار الإرهاق الأكاديمي</h1>
+                        <span class="english-text text-center block mb-6">Academic Burnout Test Results</span>
+                        
+                        <div class="${colorClass[totalLevel.color]} rounded-xl p-6 mb-6 border-2">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <h2 class="text-2xl font-bold text-gray-800">النتيجة الإجمالية</h2>
+                                    <span class="english-text">Overall Result</span>
+                                    <p class="text-lg font-semibold ${colorClass[totalLevel.color].split(' ')[2]} mt-2">مستوى الإرهاق: ${totalLevel.levelAr}</p>
+                                    <span class="english-text">Burnout Level: ${totalLevel.levelEn}</span>
+                                </div>
+                                <div class="text-4xl font-bold ${colorClass[totalLevel.color].split(' ')[2]}">${Math.round(scores.totalScore)}%</div>
+                            </div>
+                        </div>
+
+                        <div class="grid md:grid-cols-3 gap-4 mb-6">
+                            <div class="${colorClass[personalLevel.color]} rounded-lg p-4 border">
+                                <h3 class="font-semibold text-gray-800 mb-1">الإرهاق الشخصي</h3>
+                                <span class="english-text">Personal Burnout</span>
+                                <div class="text-2xl font-bold ${colorClass[personalLevel.color].split(' ')[2]} mt-2">${Math.round(scores.personalScore)}%</div>
+                                <p class="text-sm font-medium mt-1">${personalLevel.levelAr}</p>
+                                <span class="english-text">${personalLevel.levelEn}</span>
+                            </div>
+                            <div class="${colorClass[studyLevel.color]} rounded-lg p-4 border">
+                                <h3 class="font-semibold text-gray-800 mb-1">الإرهاق الدراسي</h3>
+                                <span class="english-text">Study-Related Burnout</span>
+                                <div class="text-2xl font-bold ${colorClass[studyLevel.color].split(' ')[2]} mt-2">${Math.round(scores.studyScore)}%</div>
+                                <p class="text-sm font-medium mt-1">${studyLevel.levelAr}</p>
+                                <span class="english-text">${studyLevel.levelEn}</span>
+                            </div>
+                            <div class="${colorClass[colleagueLevel.color]} rounded-lg p-4 border">
+                                <h3 class="font-semibold text-gray-800 mb-1">الإرهاق الاجتماعي</h3>
+                                <span class="english-text">Social Burnout</span>
+                                <div class="text-2xl font-bold ${colorClass[colleagueLevel.color].split(' ')[2]} mt-2">${Math.round(scores.colleagueScore)}%</div>
+                                <p class="text-sm font-medium mt-1">${colleagueLevel.levelAr}</p>
+                                <span class="english-text">${colleagueLevel.levelEn}</span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4 mb-6">
+                            ${advice.map(section => `
+                                <div class="bg-gray-50 rounded-lg p-5 border border-gray-200">
+                                    <h3 class="text-lg font-bold text-gray-800 mb-1">${section.titleAr}</h3>
+                                    <span class="english-text mb-3">${section.titleEn}</span>
+                                    <ul class="space-y-3 mt-4">
+                                        ${section.tips.map(tip => `
+                                            <li class="text-gray-700">
+                                                <div class="flex items-start gap-2">
+                                                    <span class="text-indigo-600 font-bold">•</span>
+                                                    <div class="flex-1">
+                                                        <div>${tip.ar}</div>
+                                                        <span class="english-text">${tip.en}</span>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        `).join('')}
+                                    </ul>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        <div class="bg-indigo-50 rounded-lg p-5 mb-6 border border-indigo-200">
+                            <h3 class="text-lg font-bold text-gray-800 mb-1">🆘 مصادر المساعدة</h3>
+                            <span class="english-text mb-3">Help Resources</span>
+                            <ul class="space-y-3 text-gray-700 mt-4">
+                                <li>
+                                    <div>• <strong>الإرشاد النفسي بالجامعة:</strong> تواصل مع قسم الإرشاد الطلابي</div>
+                                    <span class="english-text ml-4">University Counseling: Contact the student counseling department</span>
+                                </li>
+                                <li>
+                                    <div>• <strong>المرشد الأكاديمي:</strong> ناقش الضغوط الدراسية معه</div>
+                                    <span class="english-text ml-4">Academic Advisor: Discuss academic pressures with them</span>
+                                </li>
+                                <li>
+                                    <div>• <strong>مجموعات الدعم:</strong> انضم لمجموعات الطلاب الداعمة</div>
+                                    <span class="english-text ml-4">Support Groups: Join supportive student groups</span>
+                                </li>
+                                <li>
+                                    <div>• <strong>الخط الساخن للدعم النفسي:</strong> (إن وجد في بلدك)</div>
+                                    <span class="english-text ml-4">Mental Health Hotline: (if available in your country)</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <button onclick="restart()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-lg transition-colors">
+                            إعادة الاختبار
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function render() {
+            const app = document.getElementById('app');
+            if (!started) {
+                app.innerHTML = renderStartScreen();
+            } else if (showResults) {
+                app.innerHTML = renderResults();
+            } else {
+                app.innerHTML = renderQuestion();
+            }
+        }
+
+        render();
+    </script>
+</body>
+</html>
